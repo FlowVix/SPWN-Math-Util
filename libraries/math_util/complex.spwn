@@ -1,0 +1,266 @@
+functions = import "functions.spwn"
+extract import "const.spwn"
+
+type @complex
+
+impl @number {
+    _as_: (self, other: @type_indicator) {
+        if other == @complex {
+            return @complex::new(self, 0)
+        } else {
+            return $._as_(self, other)
+        }
+    }
+}
+
+impl @complex {
+
+    new: (re: @number = 0, im: @number = 0) {
+        return @complex::{re, im}
+    },
+
+    from_polar: (r: @number, angle: @number) {
+        return @complex::{re: r * $.cos(angle), im: r * $.sin(angle)}
+    },
+
+    I: () {
+        return @complex::{re: 0, im: 1}
+    },
+
+    print: (self) {
+        if self.re == 0 && self.im == 0 { $.print(0); return }
+        let c_string = ""
+        if self.re != 0 {
+            c_string += self.re as @string
+            if self.im > 0 {
+                c_string += "+"
+            }
+        }
+        if self.im != 0 {
+            c_string += (self.im as @string) + "i"
+        }
+        $.print(c_string)
+    },
+
+    _assign_: (self, other: @complex | @number) {
+        if other.type == @number {
+            self.re = other
+            self.im = 0
+        } else {
+            self.re = other.re
+            self.im = other.im
+        }
+    },
+
+    _plus_: (self, other: @complex | @number) {
+        if other.type == @number { 
+            return @complex::new(self.re + other, self.im) 
+        } else {
+            return @complex::new(self.re + other.re, self.im + other.im)
+        }
+    },
+    _add_: (self, other: @complex | @number) {
+        if other.type == @number { 
+            self.re += other
+        } else {
+            self.re += other.re
+            self.im += other.im
+        }
+    },
+    
+    _minus_: (self, other: @complex | @number) {
+        if other.type == @number { 
+            return @complex::new(self.re - other, self.im) 
+        } else {
+            return @complex::new(self.re - other.re, self.im - other.im)
+        }
+    },
+    _subtract_: (self, other: @complex | @number) {
+        if other.type == @number { 
+            self.re -= other
+        } else {
+            self.re -= other.re
+            self.im -= other.im
+        }
+    },
+    
+    _times_: (self, other: @complex | @number) {
+        if other.type == @number { 
+            return @complex::new(self.re * other, self.im * other) 
+        } else {
+            return @complex::new(self.re*other.re - self.im*other.im, self.re*other.im + self.im*other.re)
+        }
+    },
+    _multiply_: (self, other: @complex | @number) {
+        if other.type == @number { 
+            self.re *= other 
+            self.im *= other 
+        } else {
+            result = self * other
+            self.re = result.re
+            self.im = result.im
+        }
+    },
+    
+    _divided_by_: (self, other: @complex | @number) {
+        if other.type == @number { 
+            return @complex::new(self.re / other, self.im / other) 
+        } else {
+            return self * other.conj() / other.absSq()
+        }
+    },
+    _divide_: (self, other: @complex | @number) {
+        if other.type == @number { 
+            self.re /= other 
+            self.im /= other 
+        } else {
+            result = self / other
+            self.re = result.re
+            self.im = result.im
+        }
+    },
+
+    _pow_: (self, other: @complex | @number) {
+        if other.type == @number {
+            r = self.abs()
+            angle = self.arg()
+            return @complex::from_polar(r ^ other, angle * other)
+        } else {
+            return self ^ other.re * (@complex::I() * self.ln() * other.im).exp()
+        }
+    },
+    _exponate_: (self, other: @complex | @number) {
+        result = self ^ other
+        self.re = result.re
+        self.im = result.im
+    },
+
+    _mod_: (self, other: @complex | @number) {
+        let operand = @complex::new(0,0)
+        if other.type == @number {
+            operand = @complex(other)
+        } else {
+            operand = other
+        }
+        let result = self / operand
+        result.re = $.floor(result.re)
+        result.im = $.floor(result.im)
+        return self - operand * result
+
+    },
+    _modulate_: (self, other: @complex | @number) {
+        result = self % other
+        self.re = result.re
+        self.im = result.im
+    },
+
+
+    _equal_: (self, other: @complex | @number) {
+        if other.type == @number {
+            return self.re == other && self.im == 0
+        } else {
+            return self.re == other.re && self.im == other.im
+        }
+    },
+
+    conj: (self) {
+        return @complex::new(self.re, self.im * (-1))
+    },
+
+    abs: (self) {
+        return (self.re^2 + self.im^2) ^ 0.5
+    },
+    absSq: (self) {
+        return self.re^2 + self.im^2
+    },
+
+    arg: (self) {
+        return functions.atan2(self.im,self.re)
+    },
+
+    invert: (self) {
+        return @complex(1) / self
+    },
+
+    sqrt: (self) {
+        return self ^ 0.5
+    },
+
+    ln: (self) {
+        return @complex::new(functions.ln(self.abs()), self.arg())
+    },
+    log: (self, base: @complex | @number) {
+        if base.type == @number {
+            return self.ln() / @complex(base).ln()
+        }
+        return self.ln() / base.ln()
+    },
+
+    exp: (self) {
+        return @complex::from_polar(1, self.im) * functions.exp(self.re)
+    },
+
+    sin: (self) {
+        return @complex::new(
+            $.sin( self.re ) * functions.cosh( self.im ),
+            $.cos( self.re ) * functions.sinh( self.im )
+        )
+    },
+    cos: (self) {
+        return (@complex(PI/2) - self).sin()
+    },
+    tan: (self) {
+        return self.sin() / self.cos()
+    },
+    cot: (self) {
+        return @complex(1) / self.tan()
+    },
+    sec: (self) {
+        return @complex(1) / self.cos()
+    },
+    csc: (self) {
+        return @complex(1) / self.sin()
+    },
+
+    sinh: (self) {
+        return (@complex::I() * self).sin() * @complex::I() * (-1)
+    },
+    cosh: (self) {
+        return (@complex::I() * self).cos()
+    },
+    tanh: (self) {
+        return (@complex::I() * self).tan() * @complex::I() * (-1)
+    },
+    coth: (self) {
+        return (@complex::I() * self).cot() * @complex::I()
+    },
+    sech: (self) {
+        return (@complex::I() * self).sec()
+    },
+    csch: (self) {
+        return (@complex::I() * self).csc() * @complex::I()
+    },
+    
+    asin: (self) {
+        return @complex::I() * ((@complex(1) - self^2).sqrt() - @complex::I() * self ).ln()
+    },
+    acos: (self) {
+        return @complex(PI/2) - self.asin()
+    },
+    atan: (self) {
+        return @complex::new(0,-1/2) * ( (@complex(1) + @complex::I()*self) / (@complex(1) - @complex::I()*self) ).ln()
+    },
+    acot: (self) {
+        return self.invert().atan()
+    },
+    asec: (self) {
+        return self.invert().acos()
+    },
+    acsc: (self) {
+        return self.invert().asin()
+    }
+
+}
+
+
+ 

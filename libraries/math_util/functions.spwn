@@ -1,0 +1,85 @@
+extract import "const.spwn"
+
+abs = (x: @number) { return (-x) if x < 0 else x }
+
+exp = (x: @number) {
+    return E ^ x
+}
+
+ln = (x: @number, precision: @number = 10000000) {
+
+    if x < 0 {
+        return @complex::new( precision * abs(x) ^ (1 / precision) - precision, PI )
+    }
+    return precision * x ^ (1 / precision) - precision
+    
+}
+
+atan2 = (y: @number, x: @number) {
+    if x > 0 {
+        return $.atan(y/x)
+    }
+    if x < 0 {
+        return $.atan(y/x) + (PI if y >= 0 else -PI)
+    }
+    if x == 0 {
+        if y != 0 {
+            return (1 if y > 0 else -1) * PI/2
+        }
+        return 0
+    }
+}
+
+sec = (x: @number) { return 1 / $.cos(x) }
+csc = (x: @number) { return 1 / $.sin(x) }
+
+sinh = (x: @number) { return ( 1 - exp(-2*x) ) / ( 2*exp(-x)) }
+cosh = (x: @number) { return ( 1 + exp(-2*x) ) / ( 2*exp(-x)) }
+tanh = (x: @number) { return ( exp(2*x) - 1 ) / ( exp(2*x) + 1 ) }
+coth = (x: @number) { return ( exp(2*x) + 1 ) / ( exp(2*x) - 1 ) }
+sech = (x: @number) { return 2 * exp(x) / ( exp(2*x) + 1 ) }
+csch = (x: @number) { return 2 * exp(x) / ( exp(2*x) - 1 ) }
+
+return {
+
+    abs:
+    #[desc("Returns the absolute value of the given number")]
+    abs,
+
+    exp:
+    #[desc("Returns the result of e^x")]
+    exp,
+
+    ln:
+    #[desc("Implementation of the natural logarithm function")]
+    ln,
+
+    atan2:
+    #[desc("Returns the angle between the ray towards (x,y) and the positive x axis, confined between (-PI,PI)")]
+    atan2,
+
+    sec: #[desc("Implementation of the secant function")]
+    sec,
+
+    csc: #[desc("Implementation of the cosecant function")]
+    csc,
+
+    sinh: #[desc("Implementation of the hyperbolic sine function")]
+    sinh,
+
+    cosh: #[desc("Implementation of the hyperbolic cosine function")]
+    cosh,
+
+    tanh: #[desc("Implementation of the hyperbolic tangent function")]
+    tanh,
+
+    coth: #[desc("Implementation of the hyperbolic cotangent function")]
+    coth,
+
+    sech: #[desc("Implementation of the hyperbolic secant function")]
+    sech,
+
+    csch: #[desc("Implementation of the hyperbolic cosecant function")]
+    csch
+
+}

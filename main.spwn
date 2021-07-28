@@ -1,0 +1,7 @@
+math = import math_util
+
+let a = @complex::new(11,13)
+let b = @complex::new(2,3)
+
+$.print(math.sinh(7))
+
